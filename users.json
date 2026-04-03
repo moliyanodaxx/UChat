@@ -1,0 +1,75 @@
+{
+  "1234567890": {
+    "accountId": "1234567890",
+    "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "nickname": "1-8",
+    "avatar": "😎",
+    "rooms": [
+      "0000000000",
+      "2018164717"
+    ],
+    "createdAt": 1775037638837
+  },
+  "3410002065": {
+    "accountId": "3410002065",
+    "password": "6552b84866796cee8b8769f22dd3a91fd1b31a090ca24c477706849e7cf1d938",
+    "nickname": "42",
+    "avatar": "😎",
+    "rooms": [
+      "0000000000",
+      "0000000001"
+    ],
+    "createdAt": 1775042179136,
+    "friends": [
+      "3422384509"
+    ]
+  },
+  "3422384509": {
+    "accountId": "3422384509",
+    "password": "6552b84866796cee8b8769f22dd3a91fd1b31a090ca24c477706849e7cf1d938",
+    "nickname": "马里亚纳大猩猩",
+    "avatar": "😎",
+    "rooms": [
+      "0000000000",
+      "3028419900",
+      "0000000001"
+    ],
+    "createdAt": 1775032051285,
+    "friendRequests": [],
+    "friends": [
+      "3410002065"
+    ]
+  },
+  "test123456": {
+    "accountId": "test123456",
+    "password": "b3d17ebbe4f2b75d27b6309cfaae1487b667301a73951e7d523a039cd2dfe110",
+    "nickname": "",
+    "avatar": "",
+    "rooms": [
+      "0000000000"
+    ],
+    "createdAt": 1775034336893
+  },
+  "u000000000": {
+    "accountId": "u000000000",
+    "password": "4ebff0d422246de0c8a4c186f0b720cde343b3f0b9ee0aba5222be3b037a0818",
+    "nickname": "u0",
+    "avatar": "😎",
+    "rooms": [
+      "0000000000",
+      "5745336729"
+    ],
+    "createdAt": 1775038129004
+  },
+  "yc12345678": {
+    "accountId": "yc12345678",
+    "password": "6552b84866796cee8b8769f22dd3a91fd1b31a090ca24c477706849e7cf1d938",
+    "nickname": "yc",
+    "avatar": "😎",
+    "rooms": [
+      "0000000000",
+      "1110307888"
+    ],
+    "createdAt": 1775038813931
+  }
+}
