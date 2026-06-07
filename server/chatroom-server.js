@@ -359,7 +359,7 @@ wss.on('connection', ws => {
                     onlineCount: getRoomMembers(ws.currentRoom).length
                 };
                 broadcast(ws.currentRoom, enterMsg);
-                saveHistory(ws.currentRoom, enterMsg);
+                // ENTER消息不保存到历史记录
 
                 // 发送房间列表
                 sendRoomList();
@@ -431,7 +431,7 @@ wss.on('connection', ws => {
 
                 const joinMsg = { type: TYPE_ENTER, msg: `${ws.username} 加入房间`, time: new Date().toLocaleTimeString(), onlineCount: getRoomMembers(msg.roomId).length };
                 broadcast(msg.roomId, joinMsg, ws.uid);
-                saveHistory(msg.roomId, joinMsg);
+                // ENTER消息不保存到历史记录
                 sendHistory(msg.roomId);
                 return;
             }
@@ -470,7 +470,7 @@ wss.on('connection', ws => {
 
                 const leaveMsg = { type: TYPE_LEAVE, msg: `${ws.username} 退出房间`, time: new Date().toLocaleTimeString(), onlineCount: getRoomMembers(msg.roomId).length };
                 broadcast(msg.roomId, leaveMsg);
-                saveHistory(msg.roomId, leaveMsg);
+                // LEAVE消息不保存到历史记录
                 send({ type: TYPE_LEAVE_ROOM, success: true, roomId: msg.roomId });
 
                 if (room.members.size === 0) { rooms.delete(msg.roomId); saveRoomsData(); }
@@ -500,7 +500,7 @@ wss.on('connection', ws => {
                 }
                 const kickMsg = { type: TYPE_LEAVE, msg: `${target.username} 被移出房间`, time: new Date().toLocaleTimeString(), onlineCount: getRoomMembers(msg.roomId).length };
                 broadcast(msg.roomId, kickMsg);
-                saveHistory(msg.roomId, kickMsg);
+                // LEAVE消息不保存到历史记录
                 return;
             }
 
@@ -799,8 +799,7 @@ wss.on('connection', ws => {
                         try { c.send(data); } catch (e) {}
                     }
                 });
-                room.history.push(leaveMsg);
-                if (room.history.length > MAX_HISTORY) room.history.shift();
+                // LEAVE消息不保存到历史记录
             }
             // 不删除空房间，保留房间数据以便用户重新登录
         });
