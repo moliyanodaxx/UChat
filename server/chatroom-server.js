@@ -126,13 +126,13 @@ const server = http.createServer((req, res) => {
     let filePath, contentType;
 
     if (urlPath === '/') {
-        filePath = path.join(__dirname, 'chatroom.html');
+        filePath = path.join(__dirname, '../web/chatroom.html');
         contentType = 'text/html';
     } else if (urlPath.endsWith('.css')) {
-        filePath = path.join(__dirname, urlPath);
+        filePath = path.join(__dirname, '../web', urlPath);
         contentType = 'text/css';
     } else if (urlPath.endsWith('.js')) {
-        filePath = path.join(__dirname, urlPath);
+        filePath = path.join(__dirname, '../web', urlPath);
         contentType = 'application/javascript';
     } else {
         res.writeHead(404);
@@ -186,7 +186,7 @@ wss.on('connection', ws => {
         if (!room) return [];
         return connections
             .filter(c => c.rooms.has(roomId))
-            .map(c => ({ uid: c.uid, username: c.username, isOnline: c.readyState === WebSocket.OPEN, isOwner: room.owner === c.uid }));
+            .map(c => ({ uid: c.uid, username: c.username, avatar: c.avatar || '', signature: c.signature || '', isOnline: c.readyState === WebSocket.OPEN, isOwner: room.owner === c.uid }));
     };
 
     const saveHistory = (roomId, msg) => {
