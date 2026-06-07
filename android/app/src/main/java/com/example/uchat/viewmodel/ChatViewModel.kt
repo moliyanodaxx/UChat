@@ -492,7 +492,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     val kicked = data.get("kicked")?.asBoolean ?: false
                     if (kicked) {
                         // 从房间列表中删除被踢出的房间
-                        _rooms.value = _rooms.value.filter { it.roomId != roomId }
+                        _rooms.value = _rooms.value.filter { it.id != roomId }
                         // 清空当前房间状态
                         _currentRoomId.value = ""
                         _currentRoomName.value = ""
