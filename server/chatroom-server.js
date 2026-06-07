@@ -38,6 +38,11 @@ const TYPE_UPDATE_ROOM_PASSWORD = 25;
 const TYPE_INVITE_TO_ROOM = 26;
 const TYPE_PRIVATE_CHAT = 27;
 const TYPE_UPDATE_INVITE_STATUS = 28;
+const TYPE_ADD_BANNED_WORD = 29;
+const TYPE_REMOVE_BANNED_WORD = 30;
+const TYPE_GET_BANNED_WORDS = 31;
+const TYPE_BANNED_WORDS_LIST = 32;
+const TYPE_MSG_BLOCKED = 33;
 
 const MAX_HISTORY = 100;
 const SYSTEM_ROOM_ID = '0000000000';
@@ -86,7 +91,7 @@ const rooms = new Map();
 
 // 从持久化数据恢复所有房间
 Object.values(roomsData).forEach(r => {
-    rooms.set(r.id, { ...r, members: new Set(), history: [] });
+    rooms.set(r.id, { ...r, members: new Set(), history: [], bannedWords: new Set() });
     console.log('恢复房间:', r.id, r.name);
 });
 
@@ -95,7 +100,7 @@ if (!rooms.has(SYSTEM_ROOM_ID)) {
     const sysRoom = {
         id: SYSTEM_ROOM_ID, name: '在线聊天室', password: '',
         owner: 'system', members: new Set(), isSystem: true,
-        createdAt: Date.now(), history: []
+        createdAt: Date.now(), history: [], bannedWords: new Set()
     };
     rooms.set(SYSTEM_ROOM_ID, sysRoom);
     saveRoomsData();
@@ -107,7 +112,7 @@ if (!rooms.has(SYSTEM_MSG_ROOM_ID)) {
     const sysMsgRoom = {
         id: SYSTEM_MSG_ROOM_ID, name: '系统消息', password: '',
         owner: 'system', members: new Set(), isSystem: true,
-        createdAt: Date.now(), history: []
+        createdAt: Date.now(), history: [], bannedWords: new Set()
     };
     rooms.set(SYSTEM_MSG_ROOM_ID, sysMsgRoom);
     saveRoomsData();
@@ -384,7 +389,7 @@ wss.on('connection', ws => {
                     id: roomId, name: msg.roomName || `房间${roomId}`,
                     password: msg.password, owner: ws.uid,
                     members: new Set([ws.uid]), isSystem: false,
-                    createdAt: Date.now(), history: []
+                    createdAt: Date.now(), history: [], bannedWords: new Set()
                 };
                 rooms.set(roomId, newRoom);
                 ws.rooms.add(roomId);
@@ -682,6 +687,16 @@ wss.on('connection', ws => {
 
             // ---- 普通消息 ----
             if (msg.type === TYPE_MSG) {
+                const room = rooms.get(ws.currentRoom);
+                if (room) {
+                    // 检查违禁词
+                    for (const word of room.bannedWords) {
+                        if (msg.msg.includes(word)) {
+                            send({ type: TYPE_MSG_BLOCKED, message: `消息包含违禁词：${word}` });
+                            return;
+                        }
+                    }
+                }
                 const userData = usersData[ws.accountId];
                 const msgData = {
                     type: TYPE_MSG,
@@ -777,6 +792,34 @@ wss.on('connection', ws => {
                 } else {
                     send({ type: TYPE_UPDATE_INVITE_STATUS, success: false, error: '系统消息房间不存在' });
                 }
+                return;
+            }
+
+            // ---- 添加违禁词 ----
+            if (msg.type === TYPE_ADD_BANNED_WORD) {
+                const room = rooms.get(msg.roomId);
+                if (!room) { send({ type: TYPE_BANNED_WORDS_LIST, success: false, error: '房间不存在' }); return; }
+                if (room.owner !== ws.uid) { send({ type: TYPE_BANNED_WORDS_LIST, success: false, error: '只有房主可以设置违禁词' }); return; }
+                room.bannedWords.add(msg.word);
+                send({ type: TYPE_BANNED_WORDS_LIST, roomId: msg.roomId, words: Array.from(room.bannedWords) });
+                return;
+            }
+
+            // ---- 删除违禁词 ----
+            if (msg.type === TYPE_REMOVE_BANNED_WORD) {
+                const room = rooms.get(msg.roomId);
+                if (!room) { send({ type: TYPE_BANNED_WORDS_LIST, success: false, error: '房间不存在' }); return; }
+                if (room.owner !== ws.uid) { send({ type: TYPE_BANNED_WORDS_LIST, success: false, error: '只有房主可以删除违禁词' }); return; }
+                room.bannedWords.delete(msg.word);
+                send({ type: TYPE_BANNED_WORDS_LIST, roomId: msg.roomId, words: Array.from(room.bannedWords) });
+                return;
+            }
+
+            // ---- 获取违禁词列表 ----
+            if (msg.type === TYPE_GET_BANNED_WORDS) {
+                const room = rooms.get(msg.roomId);
+                if (!room) { send({ type: TYPE_BANNED_WORDS_LIST, success: false, error: '房间不存在' }); return; }
+                send({ type: TYPE_BANNED_WORDS_LIST, roomId: msg.roomId, words: Array.from(room.bannedWords) });
                 return;
             }
 
