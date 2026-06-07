@@ -172,3 +172,176 @@ case MsgType.LEAVE:
 - [x] 服务端已修改
 - [ ] 已测试
 - [x] 网页端UI已改进
+
+---
+
+## 🆕 新功能需求
+
+### 功能4：房间违禁词管理
+
+**功能描述：**
+房主可以为房间设置违禁词列表。当任何成员发送包含违禁词的消息时，消息将被拦截，无法发送，并提示发送者。
+
+**用户界面（客户端）：**
+1. 房间详情页添加"设置违禁词"按钮（仅房主可见）
+2. 违禁词设置页面包含：
+   - 输入框 + "添加"按钮
+   - 已有违禁词列表（气泡样式显示）
+   - 每个违禁词右上角有X删除按钮
+   - 点击X弹出确认对话框
+3. 发送消息时如包含违禁词，拦截并弹出提示
+
+**服务端实现方案：**
+
+**1. 数据结构修改**
+
+在 Room 对象中添加 `bannedWords` 字段：
+```javascript
+const room = {
+    id: roomId,
+    name: roomName,
+    owner: ownerUid,
+    password: password || null,
+    members: new Set(),
+    history: [],
+    bannedWords: new Set() // 新增：违禁词集合
+};
+```
+
+**2. 新增消息类型**
+
+在 MsgType 枚举中添加：
+```javascript
+const MsgType = {
+    // ... 现有类型
+    ADD_BANNED_WORD: 29,      // 添加违禁词
+    REMOVE_BANNED_WORD: 30,   // 删除违禁词
+    GET_BANNED_WORDS: 31,     // 获取违禁词列表
+    BANNED_WORDS_LIST: 32,    // 返回违禁词列表
+    MSG_BLOCKED: 33           // 消息被拦截（包含违禁词）
+};
+```
+
+**3. 消息处理逻辑**
+
+```javascript
+case MsgType.ADD_BANNED_WORD: {
+    const { roomId, word } = data;
+    const room = rooms.get(roomId);
+    if (!room) break;
+    
+    // 仅房主可以添加违禁词
+    if (room.owner !== ws.uid) {
+        ws.send(JSON.stringify({
+            type: MsgType.ERROR,
+            message: '只有房主可以设置违禁词'
+        }));
+        break;
+    }
+    
+    room.bannedWords.add(word);
+    
+    // 通知添加成功，返回完整列表
+    ws.send(JSON.stringify({
+        type: MsgType.BANNED_WORDS_LIST,
+        roomId: roomId,
+        words: Array.from(room.bannedWords)
+    }));
+    break;
+}
+
+case MsgType.REMOVE_BANNED_WORD: {
+    const { roomId, word } = data;
+    const room = rooms.get(roomId);
+    if (!room) break;
+    
+    // 仅房主可以删除违禁词
+    if (room.owner !== ws.uid) {
+        ws.send(JSON.stringify({
+            type: MsgType.ERROR,
+            message: '只有房主可以删除违禁词'
+        }));
+        break;
+    }
+    
+    room.bannedWords.delete(word);
+    
+    // 通知删除成功，返回完整列表
+    ws.send(JSON.stringify({
+        type: MsgType.BANNED_WORDS_LIST,
+        roomId: roomId,
+        words: Array.from(room.bannedWords)
+    }));
+    break;
+}
+
+case MsgType.GET_BANNED_WORDS: {
+    const { roomId } = data;
+    const room = rooms.get(roomId);
+    if (!room) break;
+    
+    // 返回违禁词列表
+    ws.send(JSON.stringify({
+        type: MsgType.BANNED_WORDS_LIST,
+        roomId: roomId,
+        words: Array.from(room.bannedWords)
+    }));
+    break;
+}
+```
+
+**4. 违禁词检查逻辑**
+
+在 CHAT_MSG 处理中添加检查：
+```javascript
+case MsgType.CHAT_MSG: {
+    const { roomId, content } = data;
+    const room = rooms.get(roomId);
+    if (!room) break;
+    
+    // 检查是否包含违禁词
+    for (const word of room.bannedWords) {
+        if (content.includes(word)) {
+            // 消息包含违禁词，拦截并通知发送者
+            ws.send(JSON.stringify({
+                type: MsgType.MSG_BLOCKED,
+                message: `消息包含违禁词：${word}`
+            }));
+            return; // 不继续处理
+        }
+    }
+    
+    // 未包含违禁词，正常处理消息
+    // ... 原有的消息处理逻辑
+    break;
+}
+```
+
+**消息数据结构：**
+
+客户端发送：
+```javascript
+// 添加违禁词
+{ type: 29, roomId: "room123", word: "违禁词" }
+
+// 删除违禁词
+{ type: 30, roomId: "room123", word: "违禁词" }
+
+// 获取违禁词列表
+{ type: 31, roomId: "room123" }
+```
+
+服务端响应：
+```javascript
+// 返回违禁词列表
+{ type: 32, roomId: "room123", words: ["词1", "词2"] }
+
+// 消息被拦截
+{ type: 33, message: "消息包含违禁词：xxx" }
+```
+
+**状态：**
+- [ ] 服务端已实现
+- [ ] Android端已实现
+- [ ] 网页端已实现
+- [ ] 已测试
