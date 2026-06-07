@@ -1,0 +1,13 @@
+{
+  "name": "chatroom",
+  "version": "1.0.0",
+  "description": "在线聊天室",
+  "main": "chatroom-server.js",
+  "scripts": {
+    "start": "node chatroom-server.js"
+  },
+  "dependencies": {
+    "nodejs-websocket": "^1.7.2",
+    "ws": "^8.20.0"
+  }
+}

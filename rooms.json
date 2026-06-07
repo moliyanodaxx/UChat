@@ -1,0 +1,26 @@
+{
+  "3028419900": {
+    "id": "3028419900",
+    "name": "6",
+    "password": "123456",
+    "owner": "3422384509",
+    "isSystem": false,
+    "createdAt": 1775062021318
+  },
+  "0000000000": {
+    "id": "0000000000",
+    "name": "在线聊天室",
+    "password": "",
+    "owner": "system",
+    "isSystem": true,
+    "createdAt": 1775043611053
+  },
+  "0000000001": {
+    "id": "0000000001",
+    "name": "系统消息",
+    "password": "",
+    "owner": "system",
+    "isSystem": true,
+    "createdAt": 1775065507225
+  }
+}
