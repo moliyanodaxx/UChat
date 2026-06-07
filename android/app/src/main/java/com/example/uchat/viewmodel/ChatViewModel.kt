@@ -316,17 +316,24 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun clearSearchResults() { _searchResults.value = emptyList() }
     fun clearViewedUser() { _viewedUser.value = null }
 
-    fun updateInviteStatus(roomId: String, inviteId: Long, accepted: Boolean) {
+    fun updateInviteStatus(roomId: String, inviteId: String, status: String) {
         val current = _messages.value.toMutableMap()
         val list = current[roomId]?.toMutableList() ?: return
         val index = list.indexOfFirst {
-            it is ChatMessage.InviteMessage && it.id == inviteId
+            it is ChatMessage.InviteMessage && it.inviteId == inviteId
         }
         if (index != -1) {
             val invite = list[index] as ChatMessage.InviteMessage
-            list[index] = invite.copy(accepted = accepted)
+            list[index] = invite.copy(status = status)
             current[roomId] = list
             _messages.value = current
+
+            // 发送更新到服务端
+            wsClient.send(JsonObject().apply {
+                addProperty("type", MsgType.UPDATE_INVITE_STATUS)
+                addProperty("inviteId", inviteId)
+                addProperty("status", status)
+            })
         }
     }
 
@@ -525,11 +532,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         if (t.isJsonPrimitive && t.asJsonPrimitive.isString) {
                             if (t.asString == "ROOM_INVITE") {
                                 ChatMessage.InviteMessage(
+                                    inviteId = m.get("inviteId")?.asString ?: "",
                                     from = m.get("from")?.asString ?: "",
                                     roomName = m.get("roomName")?.asString ?: "",
                                     roomId = m.get("roomId")?.asString ?: "",
                                     time = m.get("time")?.asString ?: "",
-                                    needPassword = m.get("needPassword")?.asBoolean ?: false
+                                    needPassword = m.get("needPassword")?.asBoolean ?: false,
+                                    status = m.get("status")?.asString
                                 )
                             } else null
                         } else {
@@ -699,16 +708,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             }
             MsgType.INVITE_TO_ROOM -> {
                 // Real-time invite push from server
+                val inviteId = data.get("inviteId")?.asString ?: ""
                 val from = data.get("from")?.asString ?: ""
                 val roomName = data.get("roomName")?.asString ?: ""
                 val roomId = data.get("roomId")?.asString ?: ""
                 val needPassword = data.get("needPassword")?.asBoolean ?: false
+                val status = data.get("status")?.asString
                 val now = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
                     .format(java.util.Date())
                 // 邀请消息应该显示在系统消息房间，而不是当前房间
                 addMessageToRoom("0000000001", ChatMessage.InviteMessage(
-                    from = from, roomName = roomName, roomId = roomId,
-                    time = now, needPassword = needPassword
+                    inviteId = inviteId, from = from, roomName = roomName, roomId = roomId,
+                    time = now, needPassword = needPassword, status = status
                 ))
             }
             MsgType.FORCE_LOGOUT -> {

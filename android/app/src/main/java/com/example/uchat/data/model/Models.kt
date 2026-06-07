@@ -30,6 +30,7 @@ object MsgType {
     const val UPDATE_ROOM_PASSWORD = 25
     const val INVITE_TO_ROOM = 26
     const val FORCE_LOGOUT = 27  // 被踢下线
+    const val UPDATE_INVITE_STATUS = 28  // 更新邀请状态
 }
 
 data class UserData(
@@ -98,12 +99,13 @@ sealed class ChatMessage {
 
     data class InviteMessage(
         val id: Long = nextMsgId(),
+        val inviteId: String = "",
         val from: String,
         val roomName: String,
         val roomId: String,
         val time: String,
         val needPassword: Boolean,
-        var accepted: Boolean? = null
+        val status: String? = null  // "pending" | "accepted" | "rejected"
     ) : ChatMessage()
 }
 
