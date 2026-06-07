@@ -1,4 +1,18 @@
 {
+  "1111111111": {
+    "accountId": "1111111111",
+    "password": "d2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372",
+    "nickname": "",
+    "avatar": "",
+    "signature": "",
+    "friends": [],
+    "friendRequests": [],
+    "rooms": [
+      "0000000000",
+      "0000000001"
+    ],
+    "createdAt": 1780757922378
+  },
   "1234567890": {
     "accountId": "1234567890",
     "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
@@ -10,6 +24,36 @@
     ],
     "createdAt": 1775037638837
   },
+  "1526817988": {
+    "accountId": "1526817988",
+    "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "nickname": "",
+    "avatar": "",
+    "signature": "",
+    "friends": [],
+    "friendRequests": [],
+    "rooms": [
+      "0000000000",
+      "0000000001"
+    ],
+    "createdAt": 1780757796170
+  },
+  "1583680036": {
+    "accountId": "1583680036",
+    "password": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+    "nickname": "158",
+    "avatar": "😇",
+    "signature": "嘿嘿",
+    "friends": [
+      "3422384509"
+    ],
+    "friendRequests": [],
+    "rooms": [
+      "0000000000",
+      "0000000001"
+    ],
+    "createdAt": 1780830031770
+  },
   "3410002065": {
     "accountId": "3410002065",
     "password": "6552b84866796cee8b8769f22dd3a91fd1b31a090ca24c477706849e7cf1d938",
@@ -17,28 +61,38 @@
     "avatar": "😎",
     "rooms": [
       "0000000000",
-      "0000000001"
+      "0000000001",
+      "6031501478",
+      "8246328108"
     ],
     "createdAt": 1775042179136,
     "friends": [
       "3422384509"
-    ]
+    ],
+    "signature": "飞雷神斩！"
   },
   "3422384509": {
     "accountId": "3422384509",
     "password": "6552b84866796cee8b8769f22dd3a91fd1b31a090ca24c477706849e7cf1d938",
     "nickname": "马里亚纳大猩猩",
-    "avatar": "😎",
+    "avatar": "🥸",
     "rooms": [
       "0000000000",
       "3028419900",
-      "0000000001"
+      "0000000001",
+      "6031501478",
+      "9920029652",
+      "4378694016",
+      "8246328108",
+      "7103338733"
     ],
     "createdAt": 1775032051285,
     "friendRequests": [],
     "friends": [
-      "3410002065"
-    ]
+      "3410002065",
+      "1583680036"
+    ],
+    "signature": "过家家就到此为止吧"
   },
   "test123456": {
     "accountId": "test123456",
@@ -71,5 +125,33 @@
       "1110307888"
     ],
     "createdAt": 1775038813931
+  },
+  "shr0209378": {
+    "accountId": "shr0209378",
+    "password": "73b6a08aa6e11a5a88b646d25e7b9b88d0617d30e08e17512f2bbc89ce59c6e3",
+    "nickname": "shr",
+    "avatar": "😎",
+    "signature": "",
+    "friends": [],
+    "friendRequests": [],
+    "rooms": [
+      "0000000000",
+      "0000000001"
+    ],
+    "createdAt": 1776057016778
+  },
+  "9999999999": {
+    "accountId": "9999999999",
+    "password": "ce3a598687c8d2e5aa6bedad20e059b4a78cca0adad7e563b07998d5cd226b8c",
+    "nickname": "",
+    "avatar": "",
+    "signature": "",
+    "friends": [],
+    "friendRequests": [],
+    "rooms": [
+      "0000000000",
+      "0000000001"
+    ],
+    "createdAt": 1780757876413
   }
 }
