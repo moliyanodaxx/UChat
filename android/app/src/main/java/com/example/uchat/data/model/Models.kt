@@ -51,6 +51,8 @@ data class RoomInfo(
 data class RoomMember(
     val uid: String = "",
     val username: String = "",
+    val avatar: String = "",
+    val signature: String = "",
     val isOwner: Boolean = false,
     val isOnline: Boolean = false
 )
@@ -85,6 +87,7 @@ sealed class ChatMessage {
         val msg: String,
         val time: String,
         val accountId: String,
+        val avatar: String = "",
         val isOwn: Boolean = false
     ) : ChatMessage()
 

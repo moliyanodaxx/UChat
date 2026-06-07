@@ -297,7 +297,7 @@ private fun UserMessageBubble(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = AvatarUtil.getAvatarForAccount(msg.accountId),
+                    text = msg.avatar.ifEmpty { AvatarUtil.getAvatarForAccount(msg.accountId) },
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -352,7 +352,7 @@ private fun UserMessageBubble(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = AvatarUtil.getAvatarForAccount(msg.accountId),
+                    text = msg.avatar.ifEmpty { AvatarUtil.getAvatarForAccount(msg.accountId) },
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -554,7 +554,7 @@ private fun MemberItem(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                AvatarUtil.getAvatarForAccount(member.uid),
+                member.avatar.ifBlank { AvatarUtil.getAvatarForAccount(member.uid) },
                 style = MaterialTheme.typography.titleMedium
             )
         }

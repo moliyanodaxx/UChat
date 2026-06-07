@@ -355,17 +355,12 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     viewModelScope.launch { prefs.saveProfile(nickname, avatar, signature) }
                     _needProfile.value = needProfile
                     _isLoggedIn.value = true
-                    // 触发服务器推送房间列表
-                    wsClient.send(JsonObject().apply {
-                        addProperty("type", MsgType.SET_USERNAME)
-                        addProperty("username", nickname)
-                    })
-                    // 新用户自动加入默认房间
-                    if (needProfile) {
-                        viewModelScope.launch {
-                            kotlinx.coroutines.delay(1000)
-                            joinRoom("0000000000", "")
-                        }
+                    // 如果不需要设置个人资料（老用户），立即触发服务器推送房间列表
+                    if (!needProfile && nickname.isNotBlank()) {
+                        wsClient.send(JsonObject().apply {
+                            addProperty("type", MsgType.SET_USERNAME)
+                            addProperty("username", nickname)
+                        })
                     }
                 } else {
                     _authError.value = data.get("error")?.asString ?: "登录失败"
@@ -380,6 +375,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     _myProfile.value = _myProfile.value.copy(nickname = nickname, avatar = avatar)
                     viewModelScope.launch { prefs.saveProfile(nickname, avatar) }
                     _needProfile.value = false
+                    // 新用户设置完个人资料后，通知服务端触发房间列表推送
+                    wsClient.send(JsonObject().apply {
+                        addProperty("type", MsgType.SET_USERNAME)
+                        addProperty("username", nickname)
+                    })
                 }
             }
             MsgType.UPDATE_PROFILE -> {
@@ -505,6 +505,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                     msg = m.get("msg")?.asString ?: "",
                                     time = m.get("time")?.asString ?: "",
                                     accountId = m.get("accountId")?.asString ?: "",
+                                    avatar = m.get("avatar")?.asString ?: "",
                                     isOwn = m.get("accountId")?.asString == _myProfile.value.accountId
                                 )
                                 MsgType.ENTER, MsgType.LEAVE -> ChatMessage.SystemMessage(
@@ -528,9 +529,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 val msg = data.get("msg")?.asString ?: ""
                 val time = data.get("time")?.asString ?: ""
                 val accountId = data.get("accountId")?.asString ?: ""
+                val avatar = data.get("avatar")?.asString ?: ""
                 addMessageToRoom(roomId, ChatMessage.UserMessage(
                     username = username, msg = msg, time = time,
-                    accountId = accountId,
+                    accountId = accountId, avatar = avatar,
                     isOwn = accountId == _myProfile.value.accountId
                 ))
             }
@@ -555,6 +557,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         RoomMember(
                             uid = m.get("uid")?.asString ?: "",
                             username = m.get("username")?.asString ?: "",
+                            avatar = m.get("avatar")?.asString ?: "",
+                            signature = m.get("signature")?.asString ?: "",
                             isOwner = m.get("isOwner")?.asBoolean ?: false,
                             isOnline = m.get("isOnline")?.asBoolean ?: false
                         )
@@ -600,13 +604,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 val success = data.get("success")?.asBoolean ?: false
                 if (success) {
                     val u = data.getAsJsonObject("user")
+                    val accountId = u?.get("accountId")?.asString ?: ""
                     _viewedUser.value = UserData(
-                        accountId = u?.get("accountId")?.asString ?: "",
+                        accountId = accountId,
                         nickname = u?.get("nickname")?.asString ?: "",
                         avatar = u?.get("avatar")?.asString ?: "",
                         signature = u?.get("signature")?.asString ?: ""
                     )
-                    _viewedUserIsSelf.value = data.get("isSelf")?.asBoolean ?: false
+                    // Check if viewing self by comparing accountId
+                    _viewedUserIsSelf.value = accountId == _myProfile.value.accountId
                     // Update own profile if it's self
                     if (_viewedUserIsSelf.value) {
                         _myProfile.value = _viewedUser.value!!
