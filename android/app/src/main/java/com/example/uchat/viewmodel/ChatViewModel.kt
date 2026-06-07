@@ -92,6 +92,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _toastMessage = MutableSharedFlow<String>(extraBufferCapacity = 8)
     val toastMessage: SharedFlow<String> = _toastMessage
 
+    // Kicked from room event
+    private val _kickedFromRoom = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val kickedFromRoom: SharedFlow<Unit> = _kickedFromRoom
+
     // Navigate to chat room (one-shot, consumed after use)
     private val _navigateToRoom = MutableStateFlow("")
     val navigateToRoom: StateFlow<String> = _navigateToRoom
@@ -486,16 +490,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 if (success) {
                     val roomId = data.get("roomId")?.asString ?: ""
                     val kicked = data.get("kicked")?.asBoolean ?: false
-                    if (_currentRoomId.value == roomId) {
-                        if (kicked) {
-                            viewModelScope.launch { _toastMessage.emit("你已被踢出房间") }
-                            // 被踢出后自动切换到默认在线聊天室
-                            switchRoom("0000000000")
-                        } else {
-                            _currentRoomId.value = ""
-                            _currentRoomName.value = ""
-                            _onlineCount.value = 0
+                    if (kicked) {
+                        // 从房间列表中删除被踢出的房间
+                        _rooms.value = _rooms.value.filter { it.roomId != roomId }
+                        // 清空当前房间状态
+                        _currentRoomId.value = ""
+                        _currentRoomName.value = ""
+                        _onlineCount.value = 0
+                        // 发送被踢出事件，通知UI返回房间列表
+                        viewModelScope.launch {
+                            _toastMessage.emit("你已被踢出房间")
+                            _kickedFromRoom.emit(Unit)
                         }
+                    } else if (_currentRoomId.value == roomId) {
+                        _currentRoomId.value = ""
+                        _currentRoomName.value = ""
+                        _onlineCount.value = 0
                     }
                     // 退出房间后请求更新房间列表
                     wsClient.send(JsonObject().apply {

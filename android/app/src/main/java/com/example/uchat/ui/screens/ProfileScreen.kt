@@ -26,12 +26,20 @@ fun ProfileScreen(
     onDismiss: (() -> Unit)? = null
 ) {
     val myProfile by vm.myProfile.collectAsState()
+    val needProfile by vm.needProfile.collectAsState()
 
     var nickname by remember(myProfile.nickname) { mutableStateOf(myProfile.nickname) }
     var selectedAvatar by remember(myProfile.avatar) {
         mutableStateOf(myProfile.avatar.ifEmpty { AvatarUtil.AVATARS[0] })
     }
     var signature by remember(myProfile.signature) { mutableStateOf(myProfile.signature) }
+
+    // 新用户设置完个人资料后，needProfile会变为false，此时触发导航
+    LaunchedEffect(needProfile) {
+        if (!needProfile && !isEditMode) {
+            onSave()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -122,10 +130,11 @@ fun ProfileScreen(
             onClick = {
                 if (isEditMode) {
                     vm.updateProfile(nickname, selectedAvatar, signature)
+                    onSave()
                 } else {
                     vm.setProfile(nickname, selectedAvatar)
+                    // 不立即调用onSave()，等待needProfile变为false时自动触发
                 }
-                onSave()
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = nickname.isNotBlank()

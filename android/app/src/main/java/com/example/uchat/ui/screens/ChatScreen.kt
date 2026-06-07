@@ -86,6 +86,12 @@ fun ChatScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        vm.kickedFromRoom.collect {
+            onBack()
+        }
+    }
+
     LaunchedEffect(viewedUser) {
         if (viewedUser != null) showUserProfileDialog = true
     }
