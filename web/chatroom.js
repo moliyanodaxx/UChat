@@ -43,6 +43,11 @@ const TYPE_UPDATE_PROFILE = 23;
 const TYPE_GET_ROOM_INFO = 24;
 const TYPE_UPDATE_ROOM_PASSWORD = 25;
 const TYPE_INVITE_TO_ROOM = 26;
+const TYPE_ADD_BANNED_WORD = 29;
+const TYPE_REMOVE_BANNED_WORD = 30;
+const TYPE_GET_BANNED_WORDS = 31;
+const TYPE_BANNED_WORDS_LIST = 32;
+const TYPE_MSG_BLOCKED = 33;
 
 // DOM 元素
 const authModal = document.getElementById('authModal');
@@ -491,6 +496,14 @@ function handleMessage(data) {
                 alert('邀请失败：' + data.error);
             }
             break;
+
+        case TYPE_BANNED_WORDS_LIST:
+            displayBannedWords(data.words || []);
+            break;
+
+        case TYPE_MSG_BLOCKED:
+            alert(data.message || '消息包含违禁词，发送失败');
+            break;
     }
 }
 
@@ -684,6 +697,13 @@ function showRoomMembers(members, isOwner, roomId) {
 
     const currentRoom = userRooms.find(r => r.id === currentRoomId);
     roomMenuFooter.style.display = (currentRoom && currentRoom.isSystem) ? 'none' : 'block';
+
+    // 仅房主可见违禁词管理按钮
+    if (isOwner && currentRoom && !currentRoom.isSystem) {
+        manageBannedWordsBtn.classList.remove('hidden');
+    } else {
+        manageBannedWordsBtn.classList.add('hidden');
+    }
 }
 
 function displayRoomInfo(roomInfo) {
@@ -758,6 +778,49 @@ inviteFriendBtn.addEventListener('click', () => {
 document.getElementById('closeInviteModal').addEventListener('click', () => {
     inviteFriendModal.classList.add('hidden');
 });
+
+// ===== 违禁词管理 =====
+const bannedWordsModal = document.getElementById('bannedWordsModal');
+const manageBannedWordsBtn = document.getElementById('manageBannedWordsBtn');
+const closeBannedWordsModal = document.getElementById('closeBannedWordsModal');
+const addBannedWordBtn = document.getElementById('addBannedWordBtn');
+const bannedWordInput = document.getElementById('bannedWordInput');
+const bannedWordsList = document.getElementById('bannedWordsList');
+
+manageBannedWordsBtn.addEventListener('click', () => {
+    bannedWordsModal.classList.remove('hidden');
+    ws.send(JSON.stringify({ type: TYPE_GET_BANNED_WORDS, roomId: currentRoomId }));
+});
+
+closeBannedWordsModal.addEventListener('click', () => {
+    bannedWordsModal.classList.add('hidden');
+});
+
+addBannedWordBtn.addEventListener('click', () => {
+    const word = bannedWordInput.value.trim();
+    if (!word) { alert('请输入违禁词'); return; }
+    ws.send(JSON.stringify({ type: TYPE_ADD_BANNED_WORD, roomId: currentRoomId, word }));
+    bannedWordInput.value = '';
+});
+
+function displayBannedWords(words) {
+    bannedWordsList.innerHTML = '';
+    if (words.length === 0) {
+        bannedWordsList.innerHTML = '<div style="color: #999;">暂无违禁词</div>';
+        return;
+    }
+    words.forEach(word => {
+        const tag = document.createElement('div');
+        tag.style.cssText = 'background: #f0f0f0; padding: 5px 10px; border-radius: 15px; display: flex; align-items: center; gap: 5px;';
+        tag.innerHTML = `<span>${word}</span><button style="background: none; border: none; color: #999; cursor: pointer; font-size: 16px;">×</button>`;
+        tag.querySelector('button').addEventListener('click', () => {
+            if (confirm(`确定删除违禁词"${word}"?`)) {
+                ws.send(JSON.stringify({ type: TYPE_REMOVE_BANNED_WORD, roomId: currentRoomId, word }));
+            }
+        });
+        bannedWordsList.appendChild(tag);
+    });
+}
 
 // ===== 消息显示 =====
 function sendMessage() {
