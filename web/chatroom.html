@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>UChat--网络聊天室</title>
-    <link rel="stylesheet" href="./chatroom.css?v=17">
+    <link rel="stylesheet" href="./chatroom.css?v=19">
     <meta name="cache-control" content="no-cache">
     <meta name="expires" content="0">
     <meta name="pragma" content="no-cache">
@@ -367,19 +367,20 @@
             </div>
             <div class="modal-body">
                 <div class="input-group">
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="bannedWordInput" placeholder="输入违禁词" maxlength="20" style="flex: 1;">
-                        <button class="btn-primary" id="addBannedWordBtn">添加</button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="bannedWordInput" placeholder="输入违禁词" maxlength="20"
+                               style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 15px; min-width: 200px; box-sizing: border-box;">
+                        <button class="btn-primary" id="addBannedWordBtn" style="padding: 12px 24px; white-space: nowrap;">添加</button>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>已有违禁词</label>
-                    <div id="bannedWordsList" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px;"></div>
+                    <div id="bannedWordsList" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 10px; background: #f5f5f5; border-radius: 8px;"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="./chatroom.js?v=17"></script>
+    <script src="./chatroom.js?v=21"></script>
 </body>
 </html>

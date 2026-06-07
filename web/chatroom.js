@@ -629,7 +629,10 @@ joinRoomModal.addEventListener('click', (e) => {
 // ===== 房间成员 =====
 roomMenuBtn.addEventListener('click', () => {
     roomMenu.classList.toggle('hidden');
-    if (!roomMenu.classList.contains('hidden')) requestRoomMembers();
+    if (!roomMenu.classList.contains('hidden')) {
+        manageBannedWordsBtn.classList.add('hidden'); // 默认隐藏，等响应后再决定是否显示
+        requestRoomMembers();
+    }
 });
 
 roomMenuClose.addEventListener('click', () => roomMenu.classList.add('hidden'));
@@ -699,9 +702,12 @@ function showRoomMembers(members, isOwner, roomId) {
     roomMenuFooter.style.display = (currentRoom && currentRoom.isSystem) ? 'none' : 'block';
 
     // 仅房主可见违禁词管理按钮
+    console.log('showRoomMembers - isOwner:', isOwner, 'currentRoom:', currentRoom, 'isSystem:', currentRoom?.isSystem);
     if (isOwner && currentRoom && !currentRoom.isSystem) {
+        console.log('显示违禁词按钮');
         manageBannedWordsBtn.classList.remove('hidden');
     } else {
+        console.log('隐藏违禁词按钮');
         manageBannedWordsBtn.classList.add('hidden');
     }
 }
@@ -794,6 +800,13 @@ manageBannedWordsBtn.addEventListener('click', () => {
 
 closeBannedWordsModal.addEventListener('click', () => {
     bannedWordsModal.classList.add('hidden');
+});
+
+// 点击遮罩层关闭
+bannedWordsModal.addEventListener('click', (e) => {
+    if (e.target === bannedWordsModal) {
+        bannedWordsModal.classList.add('hidden');
+    }
 });
 
 addBannedWordBtn.addEventListener('click', () => {
