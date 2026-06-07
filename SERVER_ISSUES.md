@@ -61,6 +61,34 @@
 
 ---
 
+### 问题5：登录响应缺少完整signature字段
+
+**现象**：用户登录后，个人资料界面的个性签名显示为空，但其他人查看该用户时能看到签名
+
+**原因**：LOGIN响应中userData.signature字段未正确返回或为空字符串
+
+**需要修改**：
+确保LOGIN响应返回完整用户信息，包括signature：
+```json
+{
+  "type": 15,
+  "success": true,
+  "needProfile": false,
+  "userData": {
+    "accountId": "1234567890",
+    "nickname": "张三",
+    "avatar": "😀",
+    "signature": "这是我的个性签名"  // 必须包含且非空
+  }
+}
+```
+
+**影响范围**：
+- LOGIN消息响应
+- 确保从数据库读取用户信息时包含signature字段
+
+---
+
 ## 🟡 中优先级
 
 ### 问题3：新用户未自动加入默认房间
