@@ -312,6 +312,20 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun clearSearchResults() { _searchResults.value = emptyList() }
     fun clearViewedUser() { _viewedUser.value = null }
 
+    fun updateInviteStatus(roomId: String, inviteId: Long, accepted: Boolean) {
+        val current = _messages.value.toMutableMap()
+        val list = current[roomId]?.toMutableList() ?: return
+        val index = list.indexOfFirst {
+            it is ChatMessage.InviteMessage && it.id == inviteId
+        }
+        if (index != -1) {
+            val invite = list[index] as ChatMessage.InviteMessage
+            list[index] = invite.copy(accepted = accepted)
+            current[roomId] = list
+            _messages.value = current
+        }
+    }
+
     private fun addMessageToRoom(roomId: String, msg: ChatMessage) {
         val current = _messages.value.toMutableMap()
         val list = current[roomId]?.toMutableList() ?: mutableListOf()
@@ -472,12 +486,22 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 if (success) {
                     val roomId = data.get("roomId")?.asString ?: ""
                     val kicked = data.get("kicked")?.asBoolean ?: false
-                    if (kicked) viewModelScope.launch { _toastMessage.emit("你已被踢出房间") }
                     if (_currentRoomId.value == roomId) {
-                        _currentRoomId.value = ""
-                        _currentRoomName.value = ""
-                        _onlineCount.value = 0
+                        if (kicked) {
+                            viewModelScope.launch { _toastMessage.emit("你已被踢出房间") }
+                            // 被踢出后自动切换到默认在线聊天室
+                            switchRoom("0000000000")
+                        } else {
+                            _currentRoomId.value = ""
+                            _currentRoomName.value = ""
+                            _onlineCount.value = 0
+                        }
                     }
+                    // 退出房间后请求更新房间列表
+                    wsClient.send(JsonObject().apply {
+                        addProperty("type", MsgType.SET_USERNAME)
+                        addProperty("username", _myProfile.value.nickname)
+                    })
                 }
             }
             MsgType.HISTORY -> {
@@ -671,7 +695,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 val needPassword = data.get("needPassword")?.asBoolean ?: false
                 val now = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
                     .format(java.util.Date())
-                addMessageToRoom(_currentRoomId.value, ChatMessage.InviteMessage(
+                // 邀请消息应该显示在系统消息房间，而不是当前房间
+                addMessageToRoom("0000000001", ChatMessage.InviteMessage(
                     from = from, roomName = roomName, roomId = roomId,
                     time = now, needPassword = needPassword
                 ))

@@ -154,8 +154,10 @@ fun ChatScreen(
                         is ChatMessage.SystemMessage -> SystemMessageItem(msg)
                         is ChatMessage.InviteMessage -> InviteMessageItem(
                             msg = msg,
+                            currentRoomId = roomId,
                             onAccept = { vm.joinRoom(msg.roomId, "") },
-                            onAcceptWithPassword = { pwd -> vm.joinRoom(msg.roomId, pwd) }
+                            onAcceptWithPassword = { pwd -> vm.joinRoom(msg.roomId, pwd) },
+                            onUpdateStatus = { accepted -> vm.updateInviteStatus(roomId, msg.id, accepted) }
                         )
                     }
                 }
@@ -384,11 +386,12 @@ private fun SystemMessageItem(msg: ChatMessage.SystemMessage) {
 @Composable
 private fun InviteMessageItem(
     msg: ChatMessage.InviteMessage,
+    currentRoomId: String,
     onAccept: () -> Unit,
-    onAcceptWithPassword: (String) -> Unit
+    onAcceptWithPassword: (String) -> Unit,
+    onUpdateStatus: (Boolean) -> Unit
 ) {
     var showPwdDialog by remember { mutableStateOf(false) }
-    var accepted by remember { mutableStateOf(msg.accepted) }
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -420,15 +423,18 @@ private fun InviteMessageItem(
                     color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                when (accepted) {
+                when (msg.accepted) {
                     true -> Text("已接受", color = MaterialTheme.colorScheme.primary)
                     false -> Text("已拒绝", color = MaterialTheme.colorScheme.error)
                     null -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = {
                             if (msg.needPassword) showPwdDialog = true
-                            else { accepted = true; onAccept() }
+                            else {
+                                onUpdateStatus(true)
+                                onAccept()
+                            }
                         }) { Text("接受") }
-                        OutlinedButton(onClick = { accepted = false }) { Text("拒绝") }
+                        OutlinedButton(onClick = { onUpdateStatus(false) }) { Text("拒绝") }
                     }
                 }
             }
@@ -450,7 +456,7 @@ private fun InviteMessageItem(
             },
             confirmButton = {
                 Button(onClick = {
-                    accepted = true
+                    onUpdateStatus(true)
                     onAcceptWithPassword(pwd)
                     showPwdDialog = false
                 }) { Text("确认") }
