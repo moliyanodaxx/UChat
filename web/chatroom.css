@@ -1293,3 +1293,39 @@ textarea {
     display: inline-block;
     margin-left: 4px;
 }
+
+/* 播报容器 */
+.notification-container {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 90%;
+    max-width: 500px;
+    pointer-events: none;
+}
+
+/* 播报项 */
+.notification-item {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    text-align: center;
+    animation: fadeIn 0.3s ease-in;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

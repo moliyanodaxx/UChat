@@ -316,12 +316,12 @@ function handleMessage(data) {
             break;
 
         case TYPE_ENTER:
-            addSystemMessage(data.msg);
+            showNotification(data.msg);
             if (data.onlineCount !== undefined) updateOnlineCount(data.onlineCount);
             break;
 
         case TYPE_LEAVE:
-            addSystemMessage(data.msg);
+            showNotification(data.msg);
             if (data.onlineCount !== undefined) updateOnlineCount(data.onlineCount);
             break;
 
@@ -343,8 +343,6 @@ function handleMessage(data) {
                 data.messages.forEach(msg => {
                     if (msg.type === TYPE_MSG) {
                         addMessage(msg.username, msg.msg, msg.time, msg.username === username, false, msg.accountId);
-                    } else if (msg.type === TYPE_ENTER || msg.type === TYPE_LEAVE) {
-                        addSystemMessage(msg.msg, false);
                     } else if (msg.type === 'ROOM_INVITE') {
                         addInviteMessage(msg, false);
                     }
@@ -821,6 +819,33 @@ function addMessage(senderName, content, time, isOwn = false, autoScroll = true,
     group.appendChild(wrapper);
     messagesContainer.appendChild(group);
     if (autoScroll) smoothScrollToBottom();
+}
+
+// 临时播报功能
+const notificationQueue = [];
+const MAX_NOTIFICATIONS = 3;
+
+function showNotification(message) {
+    const container = document.getElementById('notificationContainer');
+    if (!container) return;
+
+    const notification = document.createElement('div');
+    notification.className = 'notification-item';
+    notification.textContent = message;
+
+    container.insertBefore(notification, container.firstChild);
+    notificationQueue.unshift(notification);
+
+    if (notificationQueue.length > MAX_NOTIFICATIONS) {
+        const removed = notificationQueue.pop();
+        removed.remove();
+    }
+
+    setTimeout(() => {
+        notification.remove();
+        const index = notificationQueue.indexOf(notification);
+        if (index > -1) notificationQueue.splice(index, 1);
+    }, 3000);
 }
 
 function addSystemMessage(content, autoScroll = true) {
