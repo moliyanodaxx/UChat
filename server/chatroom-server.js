@@ -37,6 +37,7 @@ const TYPE_GET_ROOM_INFO = 24;
 const TYPE_UPDATE_ROOM_PASSWORD = 25;
 const TYPE_INVITE_TO_ROOM = 26;
 const TYPE_PRIVATE_CHAT = 27;
+const TYPE_UPDATE_INVITE_STATUS = 28;
 
 const MAX_HISTORY = 100;
 const SYSTEM_ROOM_ID = '0000000000';
@@ -727,12 +728,14 @@ wss.on('connection', ws => {
                 // 将邀请作为系统消息发送到目标用户的系统消息房间
                 const inviteMsg = {
                     type: 'ROOM_INVITE',
+                    inviteId: Date.now().toString() + Math.random().toString(36).substr(2, 9),
                     from: ws.username,
                     fromAccountId: ws.accountId,
                     roomId: room.id,
                     roomName: room.name,
                     needPassword: !isOwner,
-                    time: new Date().toLocaleTimeString()
+                    time: new Date().toLocaleTimeString(),
+                    status: 'pending'
                 };
 
                 // 保存到系统消息房间的历史记录（只对目标用户可见）
@@ -758,6 +761,22 @@ wss.on('connection', ws => {
                 }
 
                 send({ type: TYPE_INVITE_TO_ROOM, success: true });
+                return;
+            }
+
+            if (msg.type === TYPE_UPDATE_INVITE_STATUS) {
+                const sysMsgRoom = rooms.get(SYSTEM_MSG_ROOM_ID);
+                if (sysMsgRoom && sysMsgRoom.userMessages && sysMsgRoom.userMessages[ws.accountId]) {
+                    const invite = sysMsgRoom.userMessages[ws.accountId].find(m => m.inviteId === msg.inviteId);
+                    if (invite) {
+                        invite.status = msg.status;
+                        send({ type: TYPE_UPDATE_INVITE_STATUS, success: true });
+                    } else {
+                        send({ type: TYPE_UPDATE_INVITE_STATUS, success: false, error: '邀请不存在' });
+                    }
+                } else {
+                    send({ type: TYPE_UPDATE_INVITE_STATUS, success: false, error: '系统消息房间不存在' });
+                }
                 return;
             }
 
