@@ -636,7 +636,7 @@ function showRoomMembers(members, isOwner, roomId) {
 
         const avatar = document.createElement('div');
         avatar.className = 'member-avatar';
-        avatar.textContent = getAvatarEmoji(member.username);
+        avatar.textContent = member.avatar || getAvatarEmoji(member.username);
 
         const info = document.createElement('div');
         info.className = 'member-info';
@@ -644,6 +644,15 @@ function showRoomMembers(members, isOwner, roomId) {
         const nameEl = document.createElement('div');
         nameEl.className = 'member-name';
         nameEl.textContent = member.username + (member.isOwner ? ' (房主)' : '');
+
+        if (member.signature) {
+            const sigEl = document.createElement('div');
+            sigEl.className = 'member-signature';
+            sigEl.textContent = member.signature;
+            sigEl.style.fontSize = '12px';
+            sigEl.style.color = '#999';
+            info.appendChild(sigEl);
+        }
 
         const status = document.createElement('div');
         status.className = 'member-status' + (member.isOnline ? ' online' : '');
@@ -829,39 +838,38 @@ function addInviteMessage(inviteData, autoScroll = true) {
     const msg = document.createElement('div');
     msg.className = 'invite-message';
 
-    // 检查是否已经在该房间中
     const isJoined = userRooms.some(r => r.id === inviteData.roomId);
+    const status = inviteData.status || 'pending';
 
-    if (isJoined) {
-        msg.innerHTML = `
-            <div class="invite-content">
-                <div class="invite-text">
-                    <strong>${inviteData.from}</strong> 邀请你加入房间 <strong>${inviteData.roomName}</strong>
-                </div>
-                <div class="invite-time">${inviteData.time}</div>
-                <div class="invite-status">已加入</div>
-            </div>
-        `;
+    let statusHtml = '';
+    if (isJoined || status === 'accepted') {
+        statusHtml = '<div class="invite-status">已接受</div>';
+    } else if (status === 'rejected') {
+        statusHtml = '<div class="invite-status">已拒绝</div>';
     } else {
-        msg.innerHTML = `
-            <div class="invite-content">
-                <div class="invite-text">
-                    <strong>${inviteData.from}</strong> 邀请你加入房间 <strong>${inviteData.roomName}</strong>
-                </div>
-                <div class="invite-time">${inviteData.time}</div>
-                <div class="invite-actions">
-                    <button class="btn-primary" onclick="acceptInvite('${inviteData.roomId}', ${inviteData.needPassword})">接受</button>
-                    <button class="btn-secondary" onclick="rejectInvite()">拒绝</button>
-                </div>
+        statusHtml = `
+            <div class="invite-actions">
+                <button class="btn-primary" onclick="acceptInvite('${inviteData.inviteId}', '${inviteData.roomId}', ${inviteData.needPassword})">接受</button>
+                <button class="btn-secondary" onclick="rejectInvite('${inviteData.inviteId}')">拒绝</button>
             </div>
         `;
     }
+
+    msg.innerHTML = `
+        <div class="invite-content">
+            <div class="invite-text">
+                <strong>${inviteData.from}</strong> 邀请你加入房间 <strong>${inviteData.roomName}</strong>
+            </div>
+            <div class="invite-time">${inviteData.time}</div>
+            ${statusHtml}
+        </div>
+    `;
 
     messagesContainer.appendChild(msg);
     if (autoScroll) smoothScrollToBottom();
 }
 
-window.acceptInvite = function(roomId, needPassword) {
+window.acceptInvite = function(inviteId, roomId, needPassword) {
     if (needPassword) {
         const password = prompt('请输入房间密码（6位）：');
         if (!password) return;
@@ -869,10 +877,12 @@ window.acceptInvite = function(roomId, needPassword) {
     } else {
         ws.send(JSON.stringify({ type: TYPE_JOIN_ROOM, roomId, password: '' }));
     }
+    ws.send(JSON.stringify({ type: 28, inviteId, status: 'accepted' }));
 };
 
-window.rejectInvite = function() {
-    // 拒绝邀请，不做任何操作
+window.rejectInvite = function(inviteId) {
+    ws.send(JSON.stringify({ type: 28, inviteId, status: 'rejected' }));
+    location.reload();
 };
 
 function updateOnlineCount(count) {
