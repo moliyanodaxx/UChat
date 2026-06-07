@@ -96,6 +96,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _kickedFromRoom = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val kickedFromRoom: SharedFlow<Unit> = _kickedFromRoom
 
+    // System notifications (temporary broadcasts, max 3)
+    private val _systemNotifications = MutableStateFlow<List<SystemNotification>>(emptyList())
+    val systemNotifications: StateFlow<List<SystemNotification>> = _systemNotifications
+
     // Navigate to chat room (one-shot, consumed after use)
     private val _navigateToRoom = MutableStateFlow("")
     val navigateToRoom: StateFlow<String> = _navigateToRoom
@@ -315,6 +319,29 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearSearchResults() { _searchResults.value = emptyList() }
     fun clearViewedUser() { _viewedUser.value = null }
+
+    fun addSystemNotification(message: String) {
+        val notification = SystemNotification(
+            id = System.currentTimeMillis(),
+            message = message
+        )
+        val current = _systemNotifications.value.toMutableList()
+        current.add(0, notification) // 新的在前面
+        if (current.size > 3) {
+            current.removeAt(current.size - 1) // 移除最早的
+        }
+        _systemNotifications.value = current
+
+        // 3秒后自动移除
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(3000)
+            removeSystemNotification(notification.id)
+        }
+    }
+
+    fun removeSystemNotification(id: Long) {
+        _systemNotifications.value = _systemNotifications.value.filter { it.id != id }
+    }
 
     fun updateInviteStatus(roomId: String, inviteId: String, status: String) {
         val current = _messages.value.toMutableMap()
@@ -551,9 +578,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                                     avatar = m.get("avatar")?.asString ?: "",
                                     isOwn = m.get("accountId")?.asString == _myProfile.value.accountId
                                 )
-                                MsgType.ENTER, MsgType.LEAVE -> ChatMessage.SystemMessage(
-                                    msg = m.get("msg")?.asString ?: ""
-                                )
+                                MsgType.ENTER, MsgType.LEAVE -> null // 进入/离开消息不保存到历史记录
                                 else -> null
                             }
                         }
@@ -583,13 +608,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 val msg = data.get("msg")?.asString ?: ""
                 val count = data.get("onlineCount")?.asInt ?: _onlineCount.value
                 _onlineCount.value = count
-                addMessageToRoom(_currentRoomId.value, ChatMessage.SystemMessage(msg = msg))
+                addSystemNotification(msg)
             }
             MsgType.LEAVE -> {
                 val msg = data.get("msg")?.asString ?: ""
                 val count = data.get("onlineCount")?.asInt ?: _onlineCount.value
                 _onlineCount.value = count
-                addMessageToRoom(_currentRoomId.value, ChatMessage.SystemMessage(msg = msg))
+                addSystemNotification(msg)
             }
             MsgType.ROOM_MEMBERS -> {
                 val success = data.get("success")?.asBoolean ?: false

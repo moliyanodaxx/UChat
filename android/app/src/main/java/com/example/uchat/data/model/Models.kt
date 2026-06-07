@@ -114,3 +114,9 @@ data class ConnectionState(
     val connecting: Boolean = false,
     val error: String? = null
 )
+
+data class SystemNotification(
+    val id: Long,
+    val message: String,
+    val timestamp: Long = System.currentTimeMillis()
+)

@@ -58,6 +58,7 @@ fun ChatScreen(
     val friends by vm.friends.collectAsState()
     val viewedUser by vm.viewedUser.collectAsState()
     val viewedUserIsSelf by vm.viewedUserIsSelf.collectAsState()
+    val systemNotifications by vm.systemNotifications.collectAsState()
 
     var messageText by remember { mutableStateOf("") }
     var showEmojiPicker by remember { mutableStateOf(false) }
@@ -139,6 +140,32 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // 系统播报区域
+            if (systemNotifications.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    systemNotifications.forEach { notification ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Text(
+                                text = notification.message,
+                                modifier = Modifier.padding(8.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
