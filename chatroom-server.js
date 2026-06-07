@@ -264,13 +264,26 @@ wss.on('connection', ws => {
                 if (usersData[accountId].password !== hashPassword(password)) {
                     send({ type: TYPE_LOGIN, success: false, error: '密码错误' }); return;
                 }
+
+                // 多设备登录检测：踢掉旧连接
+                const oldConn = connections.find(c => c.accountId === accountId && c !== ws);
+                if (oldConn && oldConn.readyState === WebSocket.OPEN) {
+                    try {
+                        oldConn.send(JSON.stringify({ type: 27, reason: '账号在其他设备登录' }));
+                        oldConn.close();
+                    } catch (e) {}
+                }
+
                 ws.isAuthenticated = true;
                 ws.accountId = accountId;
                 ws.uid = accountId; // 立即设置 uid 为 accountId
                 const userData = usersData[accountId];
                 const needProfile = !userData.nickname || !userData.avatar;
-                send({ type: TYPE_LOGIN, success: true, needProfile, userData: needProfile ? null : {
-                    nickname: userData.nickname, avatar: userData.avatar
+                send({ type: TYPE_LOGIN, success: true, needProfile, userData: {
+                    accountId: userData.accountId,
+                    nickname: userData.nickname || '',
+                    avatar: userData.avatar || '',
+                    signature: userData.signature || ''
                 }});
                 return;
             }
@@ -668,7 +681,15 @@ wss.on('connection', ws => {
 
             // ---- 普通消息 ----
             if (msg.type === TYPE_MSG) {
-                const msgData = { type: TYPE_MSG, username: ws.username, accountId: ws.accountId, msg: msg.msg, time: new Date().toLocaleTimeString() };
+                const userData = usersData[ws.accountId];
+                const msgData = {
+                    type: TYPE_MSG,
+                    username: ws.username,
+                    accountId: ws.accountId,
+                    avatar: userData?.avatar || '',
+                    msg: msg.msg,
+                    time: new Date().toLocaleTimeString()
+                };
                 broadcast(ws.currentRoom, msgData);
                 saveHistory(ws.currentRoom, msgData);
             }
