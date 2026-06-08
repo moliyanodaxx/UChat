@@ -54,6 +54,20 @@
     ],
     "createdAt": 1780830031770
   },
+  "3216549870": {
+    "accountId": "3216549870",
+    "password": "576bdf8f27956287e42586dc4581229cd49921101a925612d412a3cad6ae8d5a",
+    "nickname": "",
+    "avatar": "",
+    "signature": "",
+    "friends": [],
+    "friendRequests": [],
+    "rooms": [
+      "0000000000",
+      "0000000001"
+    ],
+    "createdAt": 1780854280073
+  },
   "3410002065": {
     "accountId": "3410002065",
     "password": "6552b84866796cee8b8769f22dd3a91fd1b31a090ca24c477706849e7cf1d938",
@@ -62,8 +76,8 @@
     "rooms": [
       "0000000000",
       "0000000001",
-      "9110172466",
-      "5653698479"
+      "6031501478",
+      "8246328108"
     ],
     "createdAt": 1775042179136,
     "friends": [
@@ -78,9 +92,13 @@
     "avatar": "🥸",
     "rooms": [
       "0000000000",
+      "3028419900",
       "0000000001",
-      "9110172466",
-      "5653698479"
+      "6031501478",
+      "9920029652",
+      "4378694016",
+      "8246328108",
+      "7103338733"
     ],
     "createdAt": 1775032051285,
     "friendRequests": [],
@@ -150,32 +168,18 @@
     ],
     "createdAt": 1780757876413
   },
-  "abc3333333": {
-    "accountId": "abc3333333",
-    "password": "d82a7760b126cefd1792796ed70fdad295b4745c8bc9c43e49fad89695336705",
-    "nickname": "测试4",
-    "avatar": "🐨",
-    "signature": "测试4",
+  "4422667700": {
+    "accountId": "4422667700",
+    "password": "319a662e057b5090d89cf044e08f99603b20fa19c769ba7425e52a7be7be4460",
+    "nickname": "测试5",
+    "avatar": "😀",
+    "signature": "测试5",
     "friends": [],
     "friendRequests": [],
     "rooms": [
       "0000000000",
       "0000000001"
     ],
-    "createdAt": 1780860056400
-  },
-  "zxc1111111": {
-    "accountId": "zxc1111111",
-    "password": "b4d6b664e63782a9b8da11d31fe5fb1cf3bb9b1a910321611838cc180920abaf",
-    "nickname": "zxc",
-    "avatar": "😍",
-    "signature": "zxc",
-    "friends": [],
-    "friendRequests": [],
-    "rooms": [
-      "0000000000",
-      "0000000001"
-    ],
-    "createdAt": 1780866095958
+    "createdAt": 1780854107779
   }
 }

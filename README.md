@@ -1,82 +1,132 @@
-# UChat - Android 客户端
+# UChat - 在线聊天室
 
-UChat 网络聊天室的 Android 原生客户端，使用 Kotlin + Jetpack Compose 开发。
+UChat 是一个功能完整的实时聊天应用，支持多房间、好友系统、AI助手等功能。提供 Web 端和 Android 客户端。
 
-## 功能特性
+## ✨ 核心特性
 
-- ✅ 用户注册/登录
-- ✅ 个人资料设置（昵称、头像、签名）
-- ✅ WebSocket 实时通信
-- ✅ 房间管理（创建/加入/切换/退出）
-- ✅ 实时聊天（发送/接收消息、表情）
-- ✅ 好友系统（搜索/添加/好友列表）
-- ✅ 房间成员管理
-- ✅ 断线自动重连
-- ✅ 多设备登录检测
+### 基础功能
+- 🔐 用户注册/登录系统
+- 👤 个人资料管理（昵称、头像、签名）
+- 💬 实时消息通信（WebSocket）
+- 🏠 多房间管理（创建/加入/切换/退出）
+- 👥 好友系统（搜索/添加/管理）
+- 🔒 房间密码保护
+- 📝 违禁词过滤
 
-## 技术栈
+### 高级功能
+- 🤖 **AI助手 UU**（基于Claude API）
+  - 自然语言创建/加入房间
+  - 智能发送消息
+  - 快速更新资料
+- 🎯 房间成员管理
+- 🔄 断线自动重连
+- 📱 多设备登录检测
+- 💾 消息历史记录
 
-- **语言**: Kotlin
-- **UI框架**: Jetpack Compose + Material Design 3
-- **架构**: MVVM
-- **网络**: OkHttp WebSocket
-- **数据存储**: DataStore Preferences
-- **依赖注入**: ViewModel
+## 🚀 快速开始
 
-## 开发环境
+### 环境要求
+- Node.js 14+
+- 现代浏览器（支持WebSocket）
+- Android 11+ (移动端)
 
-- Android Studio Hedgehog | 2023.1.1+
-- Kotlin 1.9+
-- Gradle 8.2+
-- Min SDK: 30 (Android 11)
-- Target SDK: 36
+### 服务器部署
 
-## 快速开始
-
-1. **克隆项目**
 ```bash
+# 克隆项目
 git clone https://github.com/moliyanodaxx/UChat.git
-cd UChat
+cd UChat/server
+
+# 安装依赖
+npm install
+
+# 配置AI助手（可选）
+# 编辑 chatroom-server.js 中的 AI_API_KEY
+
+# 启动服务器
+npm start
 ```
 
-2. **打开 Android 客户端**
-   - 在 Android Studio 中打开 `android-client` 目录
+服务器将在 `http://localhost:10086` 启动。
 
-3. **配置服务器地址**
-   - 编辑 `app/src/main/java/com/example/uchat/ui/screens/LoginScreen.kt`
-   - 修改默认服务器地址：
-   ```kotlin
-   private const val SERVER_URL = "ws://your-server:port"
-   ```
+### Web端访问
 
-4. **运行**
-   - 连接 Android 设备或启动模拟器
-   - 点击 Run 按钮
+直接访问 `http://localhost:10086` 即可使用Web聊天室。
 
-## 项目结构
+### Android端
+
+1. 在 Android Studio 中打开 `android` 目录
+2. 修改服务器地址配置
+3. 运行到设备或模拟器
+
+## 📚 文档
+
+- [功能详细说明](./docs/FEATURES.md) - 完整功能介绍和使用指南
+- [技术文档](./docs/TECHNICAL.md) - 架构设计、API规范、协议说明
+- [开发指南](./docs/DEVELOPMENT.md) - 本地开发、贡献指南
+- [部署指南](./docs/DEPLOYMENT.md) - 生产环境部署说明
+
+## 🛠 技术栈
+
+### 前端
+- **Web**: 原生HTML/CSS/JavaScript
+- **Android**: Kotlin + Jetpack Compose + Material Design 3
+
+### 后端
+- **服务器**: Node.js + WebSocket (ws)
+- **AI服务**: Claude API (Sonnet 4.6)
+- **数据存储**: JSON文件持久化
+
+### 协议
+- WebSocket 实时通信
+- 自定义消息协议（35种消息类型）
+
+## 🤖 AI助手 UU
+
+UU 是 UChat 的智能助手，通过自然语言帮助用户操作：
 
 ```
-app/src/main/java/com/example/uchat/
-├── data/
-│   ├── local/          # 本地数据存储
-│   ├── model/          # 数据模型
-│   └── remote/         # WebSocket 客户端
-├── ui/
-│   ├── screens/        # UI 界面
-│   └── theme/          # 主题配置
-├── util/               # 工具类
-├── viewmodel/          # ViewModel
-└── MainActivity.kt     # 主入口
+"帮我创建一个技术交流房间"
+"加入房间ID为1234567890"
+"在当前房间发送：大家好"
+"把我的昵称改成小明"
 ```
 
-## 注意事项
+UU 支持的操作：
+- 创建/加入房间
+- 发送消息
+- 更新个人资料
 
-⚠️ **服务端兼容性问题**：当前版本存在一些需要服务端配合修复的问题，详见 [SERVER_ISSUES.md](./SERVER_ISSUES.md)
+## 📁 项目结构
 
-## 贡献指南
+```
+UChat/
+├── server/              # Node.js 服务器
+│   ├── chatroom-server.js
+│   ├── users.json       # 用户数据
+│   └── rooms.json       # 房间数据
+├── web/                 # Web 客户端
+│   ├── chatroom.html
+│   ├── chatroom.css
+│   └── chatroom.js
+├── android/             # Android 客户端
+│   └── app/
+└── docs/               # 文档目录
+    ├── FEATURES.md
+    ├── TECHNICAL.md
+    ├── DEVELOPMENT.md
+    └── DEPLOYMENT.md
+```
+
+## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request！
 
-## 许可证
+## 📄 许可证
 
 本项目仅用于学习交流。
+
+## 🔗 相关链接
+
+- [GitHub仓库](https://github.com/moliyanodaxx/UChat)
+- [问题反馈](https://github.com/moliyanodaxx/UChat/issues)
