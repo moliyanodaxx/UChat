@@ -19,6 +19,7 @@
             <div class="sidebar-header">
                 <div class="sidebar-title">UChat</div>
                 <div class="sidebar-actions">
+                    <button class="icon-btn" id="aiAssistantBtn" title="AI助手">🤖</button>
                     <button class="icon-btn" id="friendsBtn" title="好友">👥</button>
                     <button class="icon-btn" id="profileBtn" title="个人中心">👤</button>
                     <button class="icon-btn" id="createRoomBtn" title="创建房间">➕</button>
@@ -377,6 +378,23 @@
                     <label>已有违禁词</label>
                     <div id="bannedWordsList" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; padding: 10px; background: #f5f5f5; border-radius: 8px;"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI助手弹窗 -->
+    <div class="modal-overlay hidden" id="aiAssistantModal">
+        <div class="modal large-modal ai-modal">
+            <div class="modal-header">
+                <h2>🤖 AI助手</h2>
+                <button class="modal-close-btn" id="closeAiModal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="ai-messages" id="aiMessages"></div>
+            </div>
+            <div class="modal-footer ai-footer">
+                <input type="text" id="aiInput" placeholder="输入指令，如：帮我创建一个房间" maxlength="200">
+                <button class="btn-primary" id="sendAiBtn">发送</button>
             </div>
         </div>
     </div>

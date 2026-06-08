@@ -48,6 +48,8 @@ const TYPE_REMOVE_BANNED_WORD = 30;
 const TYPE_GET_BANNED_WORDS = 31;
 const TYPE_BANNED_WORDS_LIST = 32;
 const TYPE_MSG_BLOCKED = 33;
+const TYPE_AI_REQUEST = 34;
+const TYPE_AI_RESPONSE = 35;
 
 // DOM 元素
 const authModal = document.getElementById('authModal');
@@ -90,6 +92,12 @@ const editProfileModal = document.getElementById('editProfileModal');
 const contextMenu = document.getElementById('contextMenu');
 const inviteFriendBtn = document.getElementById('inviteFriendBtn');
 const inviteFriendModal = document.getElementById('inviteFriendModal');
+const aiAssistantBtn = document.getElementById('aiAssistantBtn');
+const aiAssistantModal = document.getElementById('aiAssistantModal');
+const aiMessages = document.getElementById('aiMessages');
+const aiInput = document.getElementById('aiInput');
+const sendAiBtn = document.getElementById('sendAiBtn');
+const closeAiModal = document.getElementById('closeAiModal');
 
 // ===== 表情相关 =====
 const emojiData = {
@@ -503,6 +511,16 @@ function handleMessage(data) {
 
         case TYPE_MSG_BLOCKED:
             alert(data.message || '消息包含违禁词，发送失败');
+            break;
+
+        case TYPE_AI_RESPONSE:
+            hideAILoading();
+            aiLoading = false;
+            if (data.success) {
+                addAIMessage('ai', data.response);
+            } else {
+                addAIMessage('ai', data.message || 'AI服务异常，请稍后重试');
+            }
             break;
     }
 }
@@ -1279,6 +1297,70 @@ editProfileModal.addEventListener('click', (e) => {
 
 inviteFriendModal.addEventListener('click', (e) => {
     if (e.target === inviteFriendModal) inviteFriendModal.classList.add('hidden');
+});
+
+// ===== AI助手 =====
+let aiMessagesList = [];
+let aiLoading = false;
+
+function addAIMessage(from, text) {
+    aiMessagesList.push({ from, text });
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `ai-message ${from}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'ai-message-bubble';
+    bubble.textContent = text;
+    msgDiv.appendChild(bubble);
+    aiMessages.appendChild(msgDiv);
+    aiMessages.scrollTop = aiMessages.scrollHeight;
+}
+
+function showAILoading() {
+    const loading = document.createElement('div');
+    loading.className = 'ai-loading';
+    loading.id = 'aiLoadingIndicator';
+    loading.textContent = '思考中...';
+    aiMessages.appendChild(loading);
+    aiMessages.scrollTop = aiMessages.scrollHeight;
+}
+
+function hideAILoading() {
+    const loading = document.getElementById('aiLoadingIndicator');
+    if (loading) loading.remove();
+}
+
+function sendAIRequest() {
+    const message = aiInput.value.trim();
+    if (!message || aiLoading) return;
+
+    addAIMessage('user', message);
+    aiInput.value = '';
+    aiLoading = true;
+    showAILoading();
+
+    ws.send(JSON.stringify({
+        type: TYPE_AI_REQUEST,
+        message: message
+    }));
+}
+
+aiAssistantBtn.addEventListener('click', () => {
+    aiAssistantModal.classList.remove('hidden');
+    setTimeout(() => aiInput.focus(), 100);
+});
+
+closeAiModal.addEventListener('click', () => {
+    aiAssistantModal.classList.add('hidden');
+});
+
+sendAiBtn.addEventListener('click', sendAIRequest);
+
+aiInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendAIRequest();
+});
+
+aiAssistantModal.addEventListener('click', (e) => {
+    if (e.target === aiAssistantModal) aiAssistantModal.classList.add('hidden');
 });
 
 window.addEventListener('beforeunload', () => {

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 const crypto = require('crypto');
+const axios = require('axios');
 
 const PORT = 10086;
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -43,10 +44,16 @@ const TYPE_REMOVE_BANNED_WORD = 30;
 const TYPE_GET_BANNED_WORDS = 31;
 const TYPE_BANNED_WORDS_LIST = 32;
 const TYPE_MSG_BLOCKED = 33;
+const TYPE_AI_REQUEST = 34;
+const TYPE_AI_RESPONSE = 35;
 
 const MAX_HISTORY = 100;
 const SYSTEM_ROOM_ID = '0000000000';
-const SYSTEM_MSG_ROOM_ID = '0000000001'; // 系统消息房间
+const SYSTEM_MSG_ROOM_ID = '0000000001';
+
+const AI_API_URL = 'https://cn.luckyapi.chat/v1/messages';
+const AI_API_KEY = 'sk-GKpoK9mtRpwEj8TFn3y2EzbYVOMeOduuFCPUz53e8a7Gk7hv';
+const AI_MODEL = 'claude-sonnet-4-6'; // 系统消息房间
 
 // ===== 持久化 =====
 let usersData = {};   // { accountId: { accountId, password, nickname, avatar, rooms[] } }
@@ -124,6 +131,77 @@ let uid = 0;
 
 function generateRoomId() {
     return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+}
+
+// ===== AI助手 =====
+function executeTool(ws, toolName, input) {
+    try {
+        if (toolName === 'create_room') {
+            const roomId = generateRoomId();
+            const room = { id: roomId, name: input.name, password: input.password || '', owner: ws.uid, members: new Set([ws.uid]), createdAt: Date.now(), history: [], bannedWords: new Set() };
+            rooms.set(roomId, room);
+            ws.rooms.add(roomId);
+            saveRoomsData();
+            return { success: true, message: `已创建房间"${input.name}"，房间ID为${roomId}` };
+        }
+        if (toolName === 'join_room') {
+            const room = rooms.get(input.roomId);
+            if (!room) return { success: false, message: '房间不存在' };
+            if (room.password && room.password !== input.password) return { success: false, message: '密码错误' };
+            ws.rooms.add(input.roomId);
+            room.members.add(ws.uid);
+            return { success: true, message: `已加入房间"${room.name}"` };
+        }
+        if (toolName === 'send_message') {
+            const room = rooms.get(input.roomId);
+            if (!room) return { success: false, message: '房间不存在' };
+            if (!ws.rooms.has(input.roomId)) return { success: false, message: '你不在这个房间' };
+            const msg = { type: TYPE_MSG, username: ws.username, msg: input.message, time: new Date().toLocaleTimeString(), accountId: ws.accountId };
+            room.history.push(msg);
+            connections.forEach(c => { if (c.rooms.has(input.roomId) && c.readyState === WebSocket.OPEN) try { c.send(JSON.stringify(msg)); } catch (e) {} });
+            return { success: true, message: '消息已发送' };
+        }
+        if (toolName === 'update_profile') {
+            const user = usersData[ws.accountId];
+            if (!user) return { success: false, message: '用户不存在' };
+            if (input.nickname) { user.nickname = input.nickname; ws.username = input.nickname; }
+            if (input.avatar) { user.avatar = input.avatar; ws.avatar = input.avatar; }
+            if (input.signature !== undefined) user.signature = input.signature;
+            saveUsersData();
+            return { success: true, message: '资料已更新' };
+        }
+        return { success: false, message: '未知工具' };
+    } catch (e) {
+        return { success: false, message: '执行失败: ' + e.message };
+    }
+}
+
+async function handleAIRequest(ws, userMessage) {
+    try {
+        const response = await axios.post(AI_API_URL, {
+            model: AI_MODEL,
+            max_tokens: 1024,
+            messages: [{ role: 'user', content: userMessage }],
+            tools: [
+                { name: 'create_room', description: '创建聊天室', input_schema: { type: 'object', properties: { name: { type: 'string', description: '房间名称' }, password: { type: 'string', description: '房间密码(可选)' } }, required: ['name'] } },
+                { name: 'join_room', description: '加入聊天室', input_schema: { type: 'object', properties: { roomId: { type: 'string', description: '房间ID' }, password: { type: 'string', description: '房间密码(可选)' } }, required: ['roomId'] } },
+                { name: 'send_message', description: '发送消息到指定房间', input_schema: { type: 'object', properties: { roomId: { type: 'string', description: '房间ID' }, message: { type: 'string', description: '消息内容' } }, required: ['roomId', 'message'] } },
+                { name: 'update_profile', description: '更新个人资料', input_schema: { type: 'object', properties: { nickname: { type: 'string', description: '昵称' }, avatar: { type: 'string', description: '头像' }, signature: { type: 'string', description: '个性签名' } } } }
+            ]
+        }, { headers: { 'x-api-key': AI_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' } });
+
+        const content = response.data.content;
+        const toolUse = content.find(c => c.type === 'tool_use');
+        if (toolUse) {
+            const result = executeTool(ws, toolUse.name, toolUse.input);
+            return { success: true, response: result.message };
+        }
+        const textContent = content.find(c => c.type === 'text');
+        return { success: true, response: textContent?.text || '我不确定如何帮助你' };
+    } catch (e) {
+        console.error('AI请求失败:', e.message);
+        return { success: false, message: 'AI服务异常' };
+    }
 }
 
 // ===== HTTP 服务 =====
@@ -820,6 +898,16 @@ wss.on('connection', ws => {
                 const room = rooms.get(msg.roomId);
                 if (!room) { send({ type: TYPE_BANNED_WORDS_LIST, success: false, error: '房间不存在' }); return; }
                 send({ type: TYPE_BANNED_WORDS_LIST, roomId: msg.roomId, words: Array.from(room.bannedWords) });
+                return;
+            }
+
+            // ---- AI助手请求 ----
+            if (msg.type === TYPE_AI_REQUEST) {
+                handleAIRequest(ws, msg.message).then(result => {
+                    send({ type: TYPE_AI_RESPONSE, ...result });
+                }).catch(err => {
+                    send({ type: TYPE_AI_RESPONSE, success: false, message: 'AI服务异常' });
+                });
                 return;
             }
 
