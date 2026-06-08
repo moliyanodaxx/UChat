@@ -181,6 +181,7 @@ async function handleAIRequest(ws, userMessage) {
         const response = await axios.post(AI_API_URL, {
             model: AI_MODEL,
             max_tokens: 1024,
+            system: '你叫UU，是UChat在线聊天室的专属AI助手。你不是Kiro，也不是其他助手。你的唯一职责是帮助用户使用UChat的功能：创建房间、加入房间、发送消息、更新资料等。请用友好、简洁的方式回应，并积极使用提供的工具来完成用户的请求。',
             messages: [{ role: 'user', content: userMessage }],
             tools: [
                 { name: 'create_room', description: '创建聊天室', input_schema: { type: 'object', properties: { name: { type: 'string', description: '房间名称' }, password: { type: 'string', description: '房间密码(可选)' } }, required: ['name'] } },
