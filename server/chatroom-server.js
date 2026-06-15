@@ -52,7 +52,7 @@ const SYSTEM_ROOM_ID = '0000000000';
 const SYSTEM_MSG_ROOM_ID = '0000000001';
 
 const AI_API_URL = 'https://cn.luckyapi.chat/v1/messages';
-const AI_API_KEY = 'sk-GKpoK9mtRpwEj8TFn3y2EzbYVOMeOduuFCPUz53e8a7Gk7hv';
+const AI_API_KEY = 'YOUR AI_API_KEY';
 const AI_MODEL = 'claude-sonnet-4-6'; // 系统消息房间
 
 // ===== 持久化 =====
